@@ -68,3 +68,12 @@ impl ShapeTrait for Circle {
 assert_eq!(Shape::Rect(Rect { w: 1.0, h: 1.0 }).name(), "Rect".to_string());
 assert_eq!(Shape::Circle(Circle { r: 1.0 }).name(), "Circle".to_string());
 ```
+
+## Why?
+Because I can... Well... RustRover indexing doesn't work with enum dispatch and in one of the threads about this problem I've read 
+
+> enum_dispatch is a rare example of absolutely IDE-unfriendly macros. It breaks every imaginable rule.
+> With current design, enum_dispatch will never be supported. ([source](https://github.com/intellij-rust/intellij-rust/issues/8813#issuecomment-1118761880))
+
+So it got me wondering if it can be implemented using declarative macro for "perfect" IDE support, and so... it can)
+### Yes, I am fixing crate to make it index correctly in my paid IDE. So what :)
