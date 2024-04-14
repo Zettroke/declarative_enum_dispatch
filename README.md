@@ -89,8 +89,8 @@ assert_eq!(Shape::Rect(Rect { w: 1.0, h: 1.0 }).name(), "Rect".to_string());
 assert_eq!(Shape::Circle(Circle { r: 1.0 }).name(), "Circle".to_string());
 ```
 ## Roadmap
-[ ] Support generic params
-[ ] Support lifetimes
+- [ ] Support generic params
+- [ ] Support lifetimes
 
 ## Why?
 Because I can... Well... RustRover indexing doesn't work with enum dispatch and in one of the threads about this problem I've read 
