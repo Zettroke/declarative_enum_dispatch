@@ -76,7 +76,4 @@ impl ShapeTrait for Circle {
 
 
 
-fn main() {
-
-
-}
+fn main() {}
