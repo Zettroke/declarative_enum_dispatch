@@ -1,6 +1,13 @@
 # Declarative generation of enum dispatch
 
 
+[![Crates.io][crates-badge]][crates-url]
+[![docs.rs][docs-badge]][docs-url]
+
+[crates-badge]: https://img.shields.io/crates/v/declarative_enum_dispatch.svg
+[crates-url]: https://crates.io/crates/declarative_enum_dispatch
+[docs-badge]: https://docs.rs/declarative_enum_dispatch/badge.svg
+[docs-url]: https://docs.rs/declarative_enum_dispatch
 Generate boilerplate code for dynamic dispatch of a trait using an enum.
 Also generates From for every enum variant
 
