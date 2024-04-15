@@ -34,6 +34,7 @@ enum_dispatch!(
         fn platform_specific(self);
     }
 
+    #[derive(Debug)]
     pub enum Shape {
         Rect(Rect),
         Circle(Circle),
@@ -41,9 +42,9 @@ enum_dispatch!(
         Cube(Cube)
     }
 );
-
+#[derive(Debug)]
 pub struct Rect{ w: i32, h: i32 }
-
+#[derive(Debug)]
 pub struct Circle { r: i32 }
 
 impl ShapeTrait for Rect {
@@ -112,6 +113,7 @@ pub trait ShapeTrait {
     #[cfg(feature = "platform_specific")]
     fn platform_specific(self);
 }
+#[derive(Debug)]
 pub enum Shape {
     Rect(Rect),
     Circle(Circle),
@@ -191,10 +193,12 @@ impl From<Cube> for Shape {
     }
 }
 
+# #[derive(Debug)]
 # pub struct Rect {
 #     w: i32,
 #     h: i32,
 # }
+# #[derive(Debug)]
 # pub struct Circle {
 #     r: i32,
 # }
@@ -299,17 +303,22 @@ macro_rules! __munch_methods {
 #[macro_export]
 macro_rules! enum_dispatch {
     (
+        $(#[$trait_attr:meta])*
         $trait_vis:vis trait $train_name:ident {
             $($any:tt)*
         }
+
+        $(#[$enum_attr:meta])*
         $enum_vis:vis enum $enum_name:ident {
             $($(#[$var_attr:meta])* $variant:ident($variant_type:ty)),+$(,)?
         }
     ) => {
+        $(#[$trait_attr])*
         $trait_vis trait $train_name {
             $($any)*
         }
 
+        $(#[$enum_attr])*
         $enum_vis enum $enum_name {
             $($(#[$var_attr])* $variant($variant_type)),+
         }

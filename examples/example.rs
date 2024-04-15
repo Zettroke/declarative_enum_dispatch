@@ -21,6 +21,7 @@ enum_dispatch!(
         fn platform_specific(self);
     }
 
+    #[derive(Debug)]
     pub enum Shape {
         Rect(Rect),
         Circle(Circle),
@@ -29,8 +30,10 @@ enum_dispatch!(
     }
 );
 
+#[derive(Debug)]
 pub struct Rect{ w: i32, h: i32 }
 
+#[derive(Debug)]
 pub struct Circle { r: i32 }
 
 impl ShapeTrait for Rect {
