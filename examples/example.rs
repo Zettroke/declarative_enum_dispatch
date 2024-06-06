@@ -1,7 +1,7 @@
 use declarative_enum_dispatch::enum_dispatch;
 
 enum_dispatch!(
-    pub trait ShapeTrait {
+    pub trait ShapeTrait: Clone + std::fmt::Debug + 'static {
         /// No return + default implementation
         fn print_name(&self) {
             println!("name: `{}`", self.name());
@@ -21,20 +21,25 @@ enum_dispatch!(
         fn platform_specific(self);
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum Shape {
         Rect(Rect),
         Circle(Circle),
         #[cfg(feature = "platform_specific")]
-        Cube(Cube)
+        Cube(Cube),
     }
 );
 
-#[derive(Debug)]
-pub struct Rect{ w: i32, h: i32 }
+#[derive(Debug, Clone)]
+pub struct Rect {
+    w: i32,
+    h: i32,
+}
 
-#[derive(Debug)]
-pub struct Circle { r: i32 }
+#[derive(Debug, Clone)]
+pub struct Circle {
+    r: i32,
+}
 
 impl ShapeTrait for Rect {
     fn print_name(&self) {
@@ -68,7 +73,7 @@ impl ShapeTrait for Circle {
         3 * self.r * self.r
     }
 
-    fn grow(&mut self, numerator: i32, denominator: i32 ) {
+    fn grow(&mut self, numerator: i32, denominator: i32) {
         self.r = self.r * numerator / denominator;
     }
 
@@ -76,7 +81,5 @@ impl ShapeTrait for Circle {
         self.area() > other.area()
     }
 }
-
-
 
 fn main() {}

@@ -14,7 +14,7 @@ Usage example:
 use declarative_enum_dispatch::enum_dispatch;
 
 enum_dispatch!(
-    pub trait ShapeTrait {
+    pub trait ShapeTrait: Clone + std::fmt::Debug + 'static {
         /// No return + default implementation
         fn print_name(&self) {
             println!("name: `{}`", self.name());
@@ -34,7 +34,7 @@ enum_dispatch!(
         fn platform_specific(self);
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum Shape {
         Rect(Rect),
         Circle(Circle),
@@ -42,9 +42,9 @@ enum_dispatch!(
         Cube(Cube)
     }
 );
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Rect{ w: i32, h: i32 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Circle { r: i32 }
 
 impl ShapeTrait for Rect {
@@ -97,7 +97,7 @@ assert_eq!(Shape::Circle(Circle { r: 1 }).name(), "Circle".to_string());
 Expansion of the macro above
 ```no_run
 use declarative_enum_dispatch::enum_dispatch;
-pub trait ShapeTrait {
+pub trait ShapeTrait: Clone + std::fmt::Debug + 'static {
     /// No return + default implementation
     fn print_name(&self) {
         println!("name: `{}`", self.name());
@@ -113,7 +113,7 @@ pub trait ShapeTrait {
     #[cfg(feature = "platform_specific")]
     fn platform_specific(self);
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Shape {
     Rect(Rect),
     Circle(Circle),
@@ -193,12 +193,12 @@ impl From<Cube> for Shape {
     }
 }
 
-# #[derive(Debug)]
+# #[derive(Debug, Clone)]
 # pub struct Rect {
 #     w: i32,
 #     h: i32,
 # }
-# #[derive(Debug)]
+# #[derive(Debug, Clone)]
 # pub struct Circle {
 #     r: i32,
 # }
@@ -304,7 +304,7 @@ macro_rules! __munch_methods {
 macro_rules! enum_dispatch {
     (
         $(#[$trait_attr:meta])*
-        $trait_vis:vis trait $train_name:ident {
+        $trait_vis:vis trait $train_name:ident $(: $lf:lifetime)? $(: $super_trait1:ident $(::$super_trait2:ident)* $(+ $super_trait3:ident $(::$super_trait4:ident)*)*)? $(+ $lf2:lifetime)? {
             $($any:tt)*
         }
 
@@ -314,7 +314,7 @@ macro_rules! enum_dispatch {
         }
     ) => {
         $(#[$trait_attr])*
-        $trait_vis trait $train_name {
+        $trait_vis trait $train_name $(: $lf)? $(: $super_trait1 $(::$super_trait2)* $(+ $super_trait3 $(::$super_trait4)*)*)? $(+ $lf2)? {
             $($any)*
         }
 
@@ -337,4 +337,3 @@ macro_rules! enum_dispatch {
         )+
     };
 }
-

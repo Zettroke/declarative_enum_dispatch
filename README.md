@@ -18,7 +18,8 @@ For benchmarks look at [enum_dispatch benchmarks](https://docs.rs/enum_dispatch/
 use declarative_enum_dispatch::enum_dispatch;
 
 enum_dispatch!(
-    pub trait ShapeTrait {
+    /// Supports trait inheritance + lifetime (although single and after traits)
+    pub trait ShapeTrait: Clone + std::fmt::Debug + 'static {
         /// No return + default implementation
         fn print_name(&self) {
             println!("name: `{}`", self.name());
@@ -101,6 +102,7 @@ assert_eq!(Shape::Circle(Circle { r: 1.0 }).name(), "Circle".to_string());
 ## Roadmap
 - [ ] Support generic params
 - [ ] Support lifetimes
+- [x] Support trait inheritance
 
 ## Why?
 Because I can... Well... RustRover indexing doesn't work with enum dispatch and in one of the threads about this problem I've read 
