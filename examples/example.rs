@@ -11,7 +11,7 @@ enum_dispatch!(
         fn area(&self) -> i32;
 
         /// Mutable self + arguments
-        fn grow(&mut self, numerator: i32, denominator: i32);
+        fn grow(&mut self, numerator: i32, denominator: i32,);
 
         /// Kinda supports generics :) Bot not generic parameters, only `impl Trait`
         fn greater(&self, other: &impl ShapeTrait) -> bool;
