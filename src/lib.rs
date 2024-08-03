@@ -321,8 +321,8 @@ macro_rules! __munch_methods {
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
 
-    ({ $($async:ident)? fn $method:ident $($rest:tt)* }; [$($(#[$var_attr:meta])* $variant:ident),+]; $enum_name:ident ) => {
-        compile_error!(concat!("method `", stringify!($method), "` should receive self"));
+    ({ $(#[$attr:meta])* $($method_def:ident)+($($args:tt)*) $($rest:tt)* }; [$($(#[$var_attr:meta])* $variant:ident),+]; $enum_name:ident ) => {
+        compile_error!(concat!("method `", stringify!($($method_def)+), "` should receive self"));
     }
 }
 
