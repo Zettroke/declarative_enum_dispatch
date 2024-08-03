@@ -29,6 +29,9 @@ enum_dispatch!(
         /// Kinda supports generics :) Bot not generic parameters, only `impl Trait`
         fn greater(&self, other: &impl ShapeTrait) -> bool;
 
+        /// Supports async methods
+        async fn send(&self);
+
         /// Works with attributes
         #[cfg(feature = "platform_specific")]
         fn platform_specific(self);
@@ -67,6 +70,8 @@ impl ShapeTrait for Rect {
     fn greater(&self, other: &impl ShapeTrait) -> bool {
         self.area() > other.area()
     }
+
+    async fn send(&self) {}
 }
 
 impl ShapeTrait for Circle {
@@ -86,6 +91,8 @@ impl ShapeTrait for Circle {
     fn greater(&self, other: &impl ShapeTrait) -> bool {
         self.area() > other.area()
     }
+
+    async fn send(&self) {}
 }
 
 
@@ -109,6 +116,8 @@ pub trait ShapeTrait: Clone + std::fmt::Debug + 'static {
     fn grow(&mut self, numerator: i32, denominator: i32);
     /// Kinda supports generics :) Bot not generic parameters, only `impl Trait`
     fn greater(&self, other: &impl ShapeTrait) -> bool;
+    /// Supports async methods
+    async fn send(&self);
     /// Works with attributes
     #[cfg(feature = "platform_specific")]
     fn platform_specific(self);
@@ -165,6 +174,15 @@ impl ShapeTrait for Shape {
             Shape::Cube(v) => v.greater(other),
         }
     }
+    /// Supports async methods
+    async fn send(&self) {
+        match self {
+            Shape::Rect(v) => v.send().await,
+            Shape::Circle(v) => v.send().await,
+            #[cfg(feature = "platform_specific")]
+            Shape::Cube(v) => v.send().await,
+        }
+    }
     /// Works with attributes
     #[cfg(feature = "platform_specific")]
     fn platform_specific(self) {
@@ -219,6 +237,7 @@ impl From<Cube> for Shape {
 #     fn greater(&self, other: &impl ShapeTrait) -> bool {
 #         self.area() > other.area()
 #     }
+#     async fn send(&self) {}
 # }
 # impl ShapeTrait for Circle {
 #     fn name(&self) -> String {
@@ -233,6 +252,7 @@ impl From<Cube> for Shape {
 #     fn greater(&self, other: &impl ShapeTrait) -> bool {
 #         self.area() > other.area()
 #     }
+#     async fn send(&self) {}
 # }
 
 ```
@@ -242,21 +262,28 @@ impl From<Cube> for Shape {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __build_method {
-    ($(#[$attr:meta])* $method:ident; {$($self_ref:tt)*}; $self_:ident; { $($arg:ident: $arg_ty:ty),* }; $( -> $return_type:ty)?; [$($(#[$var_attr:meta])* $variant:ident),+]; $enum_name:ident) => {
-        $(#[$attr])* fn $method($($self_ref)* $self_, $($arg: $arg_ty),*) $( -> $return_type)? {
-            $crate::__build_method!(@make_match $self_; $method; $enum_name; [$($(#[$var_attr])* $variant),+]; ($($arg),*))
+    ($(#[$attr:meta])* $($method_def:ident)+; {$($self_ref:tt)*}; $self_:ident; { $($arg:ident: $arg_ty:ty),* }; $( -> $return_type:ty)?; [$($(#[$var_attr:meta])* $variant:ident),+]; $enum_name:ident) => {
+        $(#[$attr])* $($method_def)+($($self_ref)* $self_, $($arg: $arg_ty),*) $( -> $return_type)? {
+            $crate::__build_method!(@make_match $self_; $($method_def)+; $enum_name; [$($(#[$var_attr])* $variant),+]; ($($arg),*))
         }
     };
 
-    (@make_match $self_:ident; $method:ident; $enum_name:ident; [$($(#[$var_attr:meta])* $variant:ident),+]; $args:tt) => {
+    (@make_match $self_:ident; fn $method:ident; $enum_name:ident; [$($(#[$var_attr:meta])* $variant:ident),+]; $args:tt) => {
         match $self_ {
             $(
                 $(#[$var_attr])*
                 $enum_name::$variant(v) => v.$method $args
             ),+
         }
-
-    }
+    };
+    (@make_match $self_:ident; async fn $method:ident; $enum_name:ident; [$($(#[$var_attr:meta])* $variant:ident),+]; $args:tt) => {
+        match $self_ {
+            $(
+                $(#[$var_attr])*
+                $enum_name::$variant(v) => v.$method $args .await
+            ),+
+        }
+    };
 }
 
 #[macro_export]
@@ -266,36 +293,35 @@ macro_rules! __build_method {
 macro_rules! __munch_methods {
     ({ }; [$($(#[$var_attr:meta])* $variant:ident),+]; $enum_name:ident) => {};
 
-
     // variants without block
-    ({ $(#[$attr:meta])* fn $method:ident($self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?; $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
-        $crate::__build_method!($(#[$attr])* $method; { }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
+    ({ $(#[$attr:meta])* $($method_def:ident)+($self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?; $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+        $crate::__build_method!($(#[$attr])* $($method_def)+; { }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
-    ({ $(#[$attr:meta])* fn $method:ident(&$self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?;  $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
-        $crate::__build_method!($(#[$attr])* $method; { & }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
+    ({ $(#[$attr:meta])* $($method_def:ident)+(&$self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?;  $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+        $crate::__build_method!($(#[$attr])* $($method_def)+; { & }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
-    ({ $(#[$attr:meta])* fn $method:ident(&mut $self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?; $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
-        $crate::__build_method!($(#[$attr])* $method; { &mut }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
+    ({ $(#[$attr:meta])* $($method_def:ident)+(&mut $self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?; $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+        $crate::__build_method!($(#[$attr])* $($method_def)+; { &mut }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
 
     // variants with block
-    ({ $(#[$attr:meta])* fn $method:ident($self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
-        $crate::__build_method!($(#[$attr])* $method; { }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
+    ({ $(#[$attr:meta])* $($method_def:ident)+($self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+        $crate::__build_method!($(#[$attr])* $($method_def)+; { }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
-    ({ $(#[$attr:meta])* fn $method:ident(&$self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
-        $crate::__build_method!($(#[$attr])* $method; { & }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
+    ({ $(#[$attr:meta])* $($method_def:ident)+(&$self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+        $crate::__build_method!($(#[$attr])* $($method_def)+; { & }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
-    ({ $(#[$attr:meta])* fn $method:ident(&mut $self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
-        $crate::__build_method!($(#[$attr])* $method; { &mut }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
+    ({ $(#[$attr:meta])* $($method_def:ident)+(&mut $self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+        $crate::__build_method!($(#[$attr])* $($method_def)+; { &mut }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
 
-    ({ fn $method:ident $($rest:tt)* }; [$($(#[$var_attr:meta])* $variant:ident),+]; $enum_name:ident ) => {
+    ({ $($async:ident)? fn $method:ident $($rest:tt)* }; [$($(#[$var_attr:meta])* $variant:ident),+]; $enum_name:ident ) => {
         compile_error!(concat!("method `", stringify!($method), "` should receive self"));
     }
 }

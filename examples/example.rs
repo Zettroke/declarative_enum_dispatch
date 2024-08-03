@@ -16,6 +16,9 @@ enum_dispatch!(
         /// Kinda supports generics :) Bot not generic parameters, only `impl Trait`
         fn greater(&self, other: &impl ShapeTrait) -> bool;
 
+        /// Supports async methods
+        async fn send(&self);
+
         /// Works with attributes
         #[cfg(feature = "platform_specific")]
         fn platform_specific(self);
@@ -61,6 +64,8 @@ impl ShapeTrait for Rect {
     fn greater(&self, other: &impl ShapeTrait) -> bool {
         self.area() > other.area()
     }
+
+    async fn send(&self) {}
 }
 
 impl ShapeTrait for Circle {
@@ -80,6 +85,8 @@ impl ShapeTrait for Circle {
     fn greater(&self, other: &impl ShapeTrait) -> bool {
         self.area() > other.area()
     }
+
+    async fn send(&self) {}
 }
 
 fn main() {}
