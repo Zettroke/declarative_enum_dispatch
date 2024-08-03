@@ -24,7 +24,7 @@ enum_dispatch!(
         fn area(&self) -> i32;
 
         /// Mutable self + arguments
-        fn grow(&mut self, numerator: i32, denominator: i32);
+        fn grow(&mut self, numerator: i32, denominator: i32,);
 
         /// Kinda supports generics :) Bot not generic parameters, only `impl Trait`
         fn greater(&self, other: &impl ShapeTrait) -> bool;
@@ -268,29 +268,29 @@ macro_rules! __munch_methods {
 
 
     // variants without block
-    ({ $(#[$attr:meta])* fn $method:ident($self_:ident $(, $($arg:ident: $arg_ty:ty),*)? ) $( -> $return_type:ty)?; $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+    ({ $(#[$attr:meta])* fn $method:ident($self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?; $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
         $crate::__build_method!($(#[$attr])* $method; { }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
-    ({ $(#[$attr:meta])* fn $method:ident(&$self_:ident $(, $($arg:ident: $arg_ty:ty),*)? ) $( -> $return_type:ty)?;  $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+    ({ $(#[$attr:meta])* fn $method:ident(&$self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?;  $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
         $crate::__build_method!($(#[$attr])* $method; { & }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
-    ({ $(#[$attr:meta])* fn $method:ident(&mut $self_:ident $(, $($arg:ident: $arg_ty:ty),*)? ) $( -> $return_type:ty)?; $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+    ({ $(#[$attr:meta])* fn $method:ident(&mut $self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)?; $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
         $crate::__build_method!($(#[$attr])* $method; { &mut }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
 
     // variants with block
-    ({ $(#[$attr:meta])* fn $method:ident($self_:ident $(, $($arg:ident: $arg_ty:ty),*)? ) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+    ({ $(#[$attr:meta])* fn $method:ident($self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
         $crate::__build_method!($(#[$attr])* $method; { }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
-    ({ $(#[$attr:meta])* fn $method:ident(&$self_:ident $(, $($arg:ident: $arg_ty:ty),*)? ) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+    ({ $(#[$attr:meta])* fn $method:ident(&$self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
         $crate::__build_method!($(#[$attr])* $method; { & }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
-    ({ $(#[$attr:meta])* fn $method:ident(&mut $self_:ident $(, $($arg:ident: $arg_ty:ty),*)? ) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
+    ({ $(#[$attr:meta])* fn $method:ident(&mut $self_:ident $(, $($arg:ident: $arg_ty:ty),*)? $(,)?) $( -> $return_type:ty)? $body:block $($rest:tt)* }; $variants:tt; $enum_name:ident) => {
         $crate::__build_method!($(#[$attr])* $method; { &mut }; $self_; { $($($arg: $arg_ty),*)? }; $( -> $return_type)?; $variants; $enum_name);
         $crate::__munch_methods!({ $($rest)* }; $variants; $enum_name);
     };
