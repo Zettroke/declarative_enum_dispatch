@@ -1,6 +1,6 @@
 [package]
 name = "declarative_enum_dispatch"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Zettroke <zettroke@protonmail.com>"]
 repository = "https://github.com/Zettroke/declarative_enum_dispatch"

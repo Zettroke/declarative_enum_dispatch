@@ -110,6 +110,7 @@ assert_eq!(Shape::Circle(Circle { r: 1.0 }).name(), "Circle".to_string());
 - [ ] Support generic params
 - [ ] Support lifetimes
 - [x] Support trait inheritance
+- [x] Support async functions
 
 ## Why?
 Because I can... Well... RustRover indexing doesn't work with enum dispatch and in one of the threads about this problem I've read 
