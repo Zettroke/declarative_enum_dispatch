@@ -33,13 +33,16 @@ enum_dispatch!(
 
         /// Kinda supports generics :) Bot not generic parameters, only `impl Trait`
         fn greater(&self, other: &impl ShapeTrait) -> bool;
+        
+        /// Supports async methods
+        async fn send(&self);
 
         /// Works with attributes
         #[cfg(feature = "platform_specific")]
         fn platform_specific(self);
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum Shape {
         Rect(Rect),
         Circle(Circle),
@@ -48,10 +51,10 @@ enum_dispatch!(
     }
 );
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Rect{ w: i32, h: i32 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Circle { r: i32 }
 
 impl ShapeTrait for Rect {
@@ -74,6 +77,8 @@ impl ShapeTrait for Rect {
     fn greater(&self, other: &impl ShapeTrait) -> bool {
         self.area() > other.area()
     }
+
+    async fn send(&self) {}
 }
 
 impl ShapeTrait for Circle {
@@ -93,6 +98,8 @@ impl ShapeTrait for Circle {
     fn greater(&self, other: &impl ShapeTrait) -> bool {
         self.area() > other.area()
     }
+
+    async fn send(&self) {}
 }
 
 
