@@ -391,18 +391,17 @@ macro_rules! __munch_methods {
 #[doc(hidden)]
 macro_rules! __munch_enums {
 
-    ($train_name:ident, { $($trait_body:tt)* }, { }) => {};
+    ($train_name:ident; { $($trait_body:tt)* }; ) => {};
     (
-        $train_name:ident,
-        { $($trait_body:tt)* },
-        {
-            $(#[$enum_attr:meta])*
-            $enum_vis:vis enum $enum_name:ident {
-                $($(#[$var_attr:meta])* $variant:ident($variant_type:ty)),+$(,)?
-            }
-
-            $($rest:tt)*
+        $train_name:ident;
+        { $($trait_body:tt)* };
+        $(#[$enum_attr:meta])*
+        $enum_vis:vis enum $enum_name:ident {
+            $($(#[$var_attr:meta])* $variant:ident($variant_type:ty)),+$(,)?
         }
+
+        $($rest:tt)*
+
     ) => {
 
         $(#[$enum_attr])*
@@ -424,7 +423,7 @@ macro_rules! __munch_enums {
         )+
 
 
-        $crate::__munch_enums!($train_name, {$($trait_body)*}, { $($rest)* });
+        $crate::__munch_enums!($train_name; {$($trait_body)*}; $($rest)*);
 
     };
 }
@@ -445,9 +444,9 @@ macro_rules! enum_dispatch {
         }
 
         $crate::__munch_enums!(
-            $train_name,
-            { $($trait_body)* },
-            { $($enums)+ }
+            $train_name;
+            { $($trait_body)* };
+            $($enums)+
         );
 
     };
