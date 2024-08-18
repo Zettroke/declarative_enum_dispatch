@@ -44,6 +44,11 @@ enum_dispatch!(
         #[cfg(feature = "platform_specific")]
         Cube(Cube)
     }
+
+    #[derive(Debug, Clone)]
+    pub enum AnotherShape {
+        Rect(Rect)
+    }
 );
 #[derive(Debug, Clone)]
 pub struct Rect{ w: i32, h: i32 }
@@ -97,7 +102,8 @@ impl ShapeTrait for Circle {
 
 
 assert_eq!(Shape::Rect(Rect { w: 1, h: 1 }).name(), "Rect".to_string());
-assert_eq!(Shape::Circle(Circle { r: 1 }).name(), "Circle".to_string());
+assert_eq!(Shape::from(Circle { r: 1 }).name(), "Circle".to_string());
+assert_eq!(AnotherShape::Rect(Rect { w: 1, h: 1 }).area(), 1);
 ```
 
 ## Macro expansion
@@ -208,6 +214,61 @@ impl From<Circle> for Shape {
 impl From<Cube> for Shape {
     fn from(value: Cube) -> Shape {
         Shape::Cube(value)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum AnotherShape {
+    Rect(Rect)
+}
+
+impl ShapeTrait for AnotherShape {
+    /// No return + default implementation
+    fn print_name(&self) {
+        match self {
+            AnotherShape::Rect(v) => v.print_name(),
+        }
+    }
+    /// Basic call without arguments
+    fn name(&self) -> String {
+        match self {
+            AnotherShape::Rect(v) => v.name(),
+        }
+    }
+    fn area(&self) -> i32 {
+        match self {
+            AnotherShape::Rect(v) => v.area(),
+        }
+    }
+    /// Mutable self + arguments
+    fn grow(&mut self, numerator: i32, denominator: i32) {
+        match self {
+            AnotherShape::Rect(v) => v.grow(numerator, denominator),
+        }
+    }
+    /// Kinda supports generics :) Bot not generic parameters, only `impl Trait`
+    fn greater(&self, other: &impl ShapeTrait) -> bool {
+        match self {
+            AnotherShape::Rect(v) => v.greater(other),
+        }
+    }
+    /// Supports async methods
+    async fn send(&self) {
+        match self {
+            AnotherShape::Rect(v) => v.send().await,
+        }
+    }
+    /// Works with attributes
+    #[cfg(feature = "platform_specific")]
+    fn platform_specific(self) {
+        match self {
+            AnotherShape::Rect(v) => v.platform_specific(),
+        }
+    }
+}
+impl From<Rect> for AnotherShape {
+    fn from(value: Rect) -> AnotherShape {
+        AnotherShape::Rect(value)
     }
 }
 
@@ -327,22 +388,22 @@ macro_rules! __munch_methods {
 }
 
 #[macro_export]
-macro_rules! enum_dispatch {
-    (
-        $(#[$trait_attr:meta])*
-        $trait_vis:vis trait $train_name:ident $(: $lf:lifetime)? $(: $super_trait1:ident $(::$super_trait2:ident)* $(+ $super_trait3:ident $(::$super_trait4:ident)*)*)? $(+ $lf2:lifetime)? {
-            $($any:tt)*
-        }
+#[doc(hidden)]
+macro_rules! __munch_enums {
 
-        $(#[$enum_attr:meta])*
-        $enum_vis:vis enum $enum_name:ident {
-            $($(#[$var_attr:meta])* $variant:ident($variant_type:ty)),+$(,)?
+    ($train_name:ident, { $($trait_body:tt)* }, { }) => {};
+    (
+        $train_name:ident,
+        { $($trait_body:tt)* },
+        {
+            $(#[$enum_attr:meta])*
+            $enum_vis:vis enum $enum_name:ident {
+                $($(#[$var_attr:meta])* $variant:ident($variant_type:ty)),+$(,)?
+            }
+
+            $($rest:tt)*
         }
     ) => {
-        $(#[$trait_attr])*
-        $trait_vis trait $train_name $(: $lf)? $(: $super_trait1 $(::$super_trait2)* $(+ $super_trait3 $(::$super_trait4)*)*)? $(+ $lf2)? {
-            $($any)*
-        }
 
         $(#[$enum_attr])*
         $enum_vis enum $enum_name {
@@ -350,7 +411,7 @@ macro_rules! enum_dispatch {
         }
 
         impl $train_name for $enum_name {
-            $crate::__munch_methods!({ $($any)* }; [$($(#[$var_attr])* $variant),+]; $enum_name);
+            $crate::__munch_methods!({ $($trait_body)* }; [$($(#[$var_attr])* $variant),+]; $enum_name);
         }
 
         $(
@@ -361,5 +422,33 @@ macro_rules! enum_dispatch {
                  }
             }
         )+
+
+
+        $crate::__munch_enums!($train_name, {$($trait_body)*}, { $($rest)* });
+
+    };
+}
+
+#[macro_export]
+macro_rules! enum_dispatch {
+    (
+        $(#[$trait_attr:meta])*
+        $trait_vis:vis trait $train_name:ident $(: $lf:lifetime)? $(: $super_trait1:ident $(::$super_trait2:ident)* $(+ $super_trait3:ident $(::$super_trait4:ident)*)*)? $(+ $lf2:lifetime)? {
+            $($trait_body:tt)*
+        }
+
+        $($enums:tt)+
+    ) => {
+        $(#[$trait_attr])*
+        $trait_vis trait $train_name $(: $lf)? $(: $super_trait1 $(::$super_trait2)* $(+ $super_trait3 $(::$super_trait4)*)*)? $(+ $lf2)? {
+            $($trait_body)*
+        }
+
+        $crate::__munch_enums!(
+            $train_name,
+            { $($trait_body)* },
+            { $($enums)+ }
+        );
+
     };
 }
