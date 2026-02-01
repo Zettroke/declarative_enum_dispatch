@@ -1,3 +1,4 @@
+#![no_std]
 /*!
 # Declarative generation of enum dispatch
 
