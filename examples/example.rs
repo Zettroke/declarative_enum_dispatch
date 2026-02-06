@@ -17,6 +17,7 @@ enum_dispatch!(
         fn greater(&self, other: &impl ShapeTrait) -> bool;
 
         /// Supports async methods
+        #[allow(async_fn_in_trait)]
         async fn send(&self);
 
         /// Works with attributes

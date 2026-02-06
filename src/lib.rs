@@ -2,9 +2,8 @@
 /*!
 # Declarative generation of enum dispatch
 
-
 Generate boilerplate code for dynamic dispatch of a trait using an enum.
-Also generates From for every enum variant
+Also generates [From] implementation for every enum variant
 
 This is a fully declarative version of [enum_dispatch](https://docs.rs/enum_dispatch) macro
 
@@ -31,6 +30,7 @@ enum_dispatch!(
         fn greater(&self, other: &impl ShapeTrait) -> bool;
 
         /// Supports async methods
+        #[allow(async_fn_in_trait)]
         async fn send(&self);
 
         /// Works with attributes
@@ -72,6 +72,7 @@ impl ShapeTrait for Rect {
         self.area() > other.area()
     }
 
+    #[allow(async_fn_in_trait)]
     async fn send(&self) {}
 }
 
@@ -93,6 +94,7 @@ impl ShapeTrait for Circle {
         self.area() > other.area()
     }
 
+    #[allow(async_fn_in_trait)]
     async fn send(&self) {}
 }
 
@@ -176,6 +178,7 @@ impl ShapeTrait for Shape {
         }
     }
     /// Supports async methods
+    #[allow(async_fn_in_trait)]
     async fn send(&self) {
         match self {
             Shape::Rect(v) => v.send().await,

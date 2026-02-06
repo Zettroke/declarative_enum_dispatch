@@ -35,6 +35,7 @@ enum_dispatch!(
         fn greater(&self, other: &impl ShapeTrait) -> bool;
         
         /// Supports async methods
+        #[allow(async_fn_in_trait)]
         async fn send(&self);
 
         /// Works with attributes
@@ -78,6 +79,7 @@ impl ShapeTrait for Rect {
         self.area() > other.area()
     }
 
+    #[allow(async_fn_in_trait)]
     async fn send(&self) {}
 }
 
@@ -99,6 +101,7 @@ impl ShapeTrait for Circle {
         self.area() > other.area()
     }
 
+    #[allow(async_fn_in_trait)]
     async fn send(&self) {}
 }
 
@@ -106,11 +109,8 @@ impl ShapeTrait for Circle {
 assert_eq!(Shape::Rect(Rect { w: 1.0, h: 1.0 }).name(), "Rect".to_string());
 assert_eq!(Shape::Circle(Circle { r: 1.0 }).name(), "Circle".to_string());
 ```
-## Roadmap
-- [ ] Support generic params
-- [ ] Support lifetimes
-- [x] Support trait inheritance
-- [x] Support async functions
+
+> See [docs](https://docs.rs/declarative_enum_dispatch) for an example of generated code
 
 ## Why?
 Because I can... Well... RustRover indexing doesn't work with enum dispatch and in one of the threads about this problem I've read 
