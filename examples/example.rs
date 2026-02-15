@@ -32,6 +32,11 @@ enum_dispatch!(
         #[cfg(feature = "platform_specific")]
         Cube(Cube),
     }
+
+    #[derive(Debug, Clone)]
+    pub enum AnotherShape {
+        Rect(Rect)
+    }
 );
 
 #[derive(Debug, Clone)]
